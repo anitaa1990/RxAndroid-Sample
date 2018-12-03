@@ -31,7 +31,6 @@ import io.reactivex.Single;
 import io.reactivex.SingleEmitter;
 import io.reactivex.SingleObserver;
 import io.reactivex.SingleOnSubscribe;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Consumer;
@@ -41,7 +40,12 @@ import io.reactivex.internal.subscribers.SinglePostCompleteSubscriber;
 import io.reactivex.observables.GroupedObservable;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.schedulers.Timed;
+import io.reactivex.subjects.AsyncSubject;
+import io.reactivex.subjects.BehaviorSubject;
+import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.ReplaySubject;
 import io.reactivex.subjects.Subject;
+import io.reactivex.subjects.UnicastSubject;
 
 public class ExampleUnitTest {
 
@@ -2073,5 +2077,221 @@ public class ExampleUnitTest {
                         System.out.println("Error: " + e.getMessage());
                     }
                 });
+    }
+
+
+    @Test
+    public void testSubjectExample() {
+
+        /*
+         * Step 1: Create an observable that emits an integer
+         * from 1 to 5
+         *  */
+        Observable<Integer> observable = Observable.range(1, 5)
+                .subscribeOn(Schedulers.io());
+
+        /*
+         * Step 2: Create a subject that observes
+         * this emission from the observable. In this scenario,
+         * the subject acts an an observer since it observes the
+         * changes to the Observable.
+         *  */
+        ReplaySubject<Integer> subject = ReplaySubject.create();
+        observable.subscribe(subject);
+
+
+        /*
+         * Step 3: In this scenario, the subject acts an an Observable,
+         * since it emits each item from the original Observable.
+         *  */
+        subject.subscribe(s -> System.out.println("subscriber one: " + s));
+        subject.subscribe(s -> System.out.println("subscriber two: " + s));
+    }
+
+
+    @Test
+    public void testSubjectMulticastExample() {
+
+        /*
+         * Step 1: Create an observable that emits an integer
+         * from 1 to 5. Each item is squared by itself before it is
+         * emitted.
+         *  */
+        Observable<Integer> observable = Observable.range(1, 5)
+                .subscribeOn(Schedulers.io())
+                .map(integer -> {
+                    System.out.println(String.format("Squaring %d with itself", integer));
+                    return integer * integer;
+                });
+
+        /*
+         * Step 2: Create a subject that observes
+         * this emission from the observable.
+         *  */
+        ReplaySubject<Integer> subject = ReplaySubject.create();
+        observable.subscribe(subject);
+
+
+        /*
+         * Step 3: We are subscribing two subscribers to the Subject.
+         *  */
+        subject.subscribe(s -> System.out.println("subscriber one: " + s));
+        subject.subscribe(s -> System.out.println("subscriber two: " + s));
+    }
+
+
+    @Test
+    public void testSubjectWithoutMulticastExample() throws InterruptedException {
+
+        /*
+         * Step 1: Create an observable that emits an integer
+         * from 1 to 5. Each item is squared by itself before it is
+         * emitted.
+         *  */
+        Observable<Integer> observable = Observable.range(1, 5)
+                .subscribeOn(Schedulers.io())
+                .map(integer -> {
+                    System.out.println(String.format("Squaring %d with itself", integer));
+                    return integer * integer;
+                });
+
+        /*
+         * Step 2: We are subscribing two subscribers to the Observable.
+         *  */
+        observable.subscribe(s -> System.out.println("subscriber one: " + s));
+
+        Thread.sleep(90);
+        observable.subscribe(s -> System.out.println("subscriber two: " + s));
+    }
+
+
+    @Test
+    public void testSubjectAsHotObservablesExample() {
+
+        /*
+         * Step 1: Create a subject and emit a
+         * single integer from the subject. (Subject is acting
+         * as an Observable in this case)
+         * */
+        PublishSubject<Integer> pSubject = PublishSubject.create();
+        pSubject.onNext(0);
+
+
+        /*
+         * Step 2: Subscribe to the Subject - emissions from the subject
+         * will be printed
+         * */
+        pSubject.subscribe(it -> System.out.println("Observer 1 onNext: " + it),
+                (Throwable onError) -> { },
+                () -> {},
+                on1 -> System.out.println("Observer 1 onSubscribe"));
+
+        /*
+         * Step 3: Again emit values from subject.
+         * */
+        pSubject.onNext(1);
+        pSubject.onNext(2);
+
+
+        /*
+         * Step 4: Again observe the emissions by adding
+         * another Observer to the Subject.
+         * */
+        pSubject.subscribe(it -> System.out.println("Observer 2 onNext: " + it),
+                (Throwable onError) -> { },
+                () -> {},
+                on1 -> System.out.println("Observer 2 onSubscribe"));
+
+
+        pSubject.onNext(3);
+        pSubject.onNext(4);
+    }
+
+
+    @Test
+    public void testBehaviorSubjectExample() {
+
+        BehaviorSubject<Integer> pSubject = BehaviorSubject.create();
+        pSubject.onNext(0);
+
+
+        pSubject.subscribe(it -> System.out.println("Observer 1 onNext: " + it),
+                (Throwable error) -> { }, () -> {},
+                on1 -> System.out.println("Observer 1 onSubscribe"));
+
+        pSubject.onNext(1);
+        pSubject.onNext(2);
+
+
+        pSubject.subscribe(it -> System.out.println("Observer 2 onNext: " + it),
+                (Throwable error) -> { }, () -> {},
+                on1 -> System.out.println("Observer 2 onSubscribe"));
+
+        pSubject.onNext(3);
+        pSubject.onNext(4);
+    }
+
+    @Test
+    public void testReplaySubjectExample() {
+
+        ReplaySubject<Integer> pSubject = ReplaySubject.create();
+        pSubject.onNext(0);
+
+
+        pSubject.subscribe(it -> System.out.println("Observer 1 onNext: " + it),
+                (Throwable error) -> { }, () -> {},
+                on1 -> System.out.println("Observer 1 onSubscribe"));
+
+        pSubject.onNext(1);
+        pSubject.onNext(2);
+
+
+        pSubject.subscribe(it -> System.out.println("Observer 2 onNext: " + it),
+                (Throwable error) -> { }, () -> {},
+                on1 -> System.out.println("Observer 2 onSubscribe"));
+
+        pSubject.onNext(3);
+        pSubject.onNext(4);
+    }
+
+    @Test
+    public void testAsyncSubjectExample() {
+
+        AsyncSubject<Integer> pSubject = AsyncSubject.create();
+        pSubject.onNext(0);
+
+
+        pSubject.subscribe(it -> System.out.println("Observer 1 onNext: " + it),
+                (Throwable error) -> { }, () -> System.out.println("Observer 1 onComplete"),
+                on1 -> System.out.println("Observer 1 onSubscribe"));
+
+        pSubject.onNext(1);
+        pSubject.onNext(2);
+
+
+        pSubject.subscribe(it -> System.out.println("Observer 2 onNext: " + it),
+                (Throwable error) -> { }, () -> System.out.println("Observer 2 onComplete"),
+                on1 -> System.out.println("Observer 2 onSubscribe"));
+
+        pSubject.onNext(3);
+        pSubject.onNext(4);
+
+        /* This is very important in AsyncSubject  */
+        pSubject.onComplete();
+    }
+
+
+    @Test
+    public void testUnicastSubjectExample() {
+
+        Observable<Integer> observable = Observable.range(1, 5)
+                .subscribeOn(Schedulers.io());
+
+
+        UnicastSubject<Integer> pSubject = UnicastSubject.create();
+        observable.subscribe(pSubject);
+
+
+        pSubject.subscribe(it -> System.out.println("onNext: " + it));
     }
 }
