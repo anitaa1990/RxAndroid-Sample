@@ -211,6 +211,24 @@ implementation 'com.github.akarnokd:rxjava2-extensions:0.20.0'
 You can checkout a lot more about Flowable operators from [here](https://www.baeldung.com/rxjava-2-flowable).
 
 
+### Subjects and different Types of Subjects
+ * A [Subject](http://reactivex.io/documentation/subject.html) extends an Observable and implements Observer at the same time. It acts as an Observable to clients and registers to multiple events taking place in the app. It acts as an Observer by broadcasting the event to multiple subscribers.
+ * <b>Characteristics of Subjects</b>:
+    * Subjects can act as both an Observer and an Observable. In the following example, we create an Observable which emits integers from 1 to 5. We create a subject, and use it to observe the changes to the Observable(In this scenario, the Subject is acting as an Observer). We will have two Observers to observe the changes in the Subject (In this scenario, the Subject is acting as an Observable). [Example](https://gist.github.com/anitaa1990/6ff85e801e45ff262490f0a44578735a#file-subjectexample-java)
+    * Subjects can multicast items to multiple child subscribers. Multicasting makes it possible to run expensive operations once and emit the results to multiple subscribers. This prevents doing duplicate operations for multiple subscribers.  In the following example, we create an Observable which emits integers from 1 to 5. Each integer is squared by itself using the map() operator before it is emitted. We will have two Observers to observe the Observable. [Example without Subjects](https://gist.github.com/anitaa1990/dc168b63a0a9839cf240e911a8bee0e9#file-multiplesubscriberswithoutsubjectsexample-java) [Example using Subjects](https://gist.github.com/anitaa1990/7aef38776789bdccbcee179faf55ab04#file-multiplesubscriberswithsubjectsexample-java)
+    * Subjects are considered as HOT Observables. A HOT Observable, such as Subjects, emits items only once regardless of number of subscribers and its subscribers receive items only from the point of their subscription. Subjects convert cold observable into hot observable. Example scenario: In the following example, we create a Subject which emits an integer from 1 to 4. We will add two Observers to observe the emission. [Example](https://gist.github.com/anitaa1990/244107a2402bbf8201251ad968d398b8#file-hotobservableexample-java). You will notice from the above output in the example that,
+         * Even though the Subject emits the integer value ‘0’, it is not printed. This is because there are no subscribers that are listening to the emission.
+         * Observer 2 only prints values ‘3’ and ‘4’. This is because the second Observer only subscribed to the Subject after it emitted values 0, 1 and 2.
+ * <b>Types of Subjects</b>:
+   * [PublishSubject](http://reactivex.io/RxJava/javadoc/io/reactivex/subjects/PublishSubject.html): PublishSubject emits all the items at the point of subscription. This is the most basic form of Subject. [Example](https://gist.github.com/anitaa1990/3b41656f7f364293ae4a66b4e17d099b#file-publishsubjectexample-java)
+   * [BehaviorSubject](http://reactivex.io/RxJava/javadoc/io/reactivex/subjects/BehaviorSubject.html): BehaviorSubject emits the most recent item at the time of their subscription and all items after that. [Example](https://gist.github.com/anitaa1990/beefc2f31d9d18067e38e536c7b74b02#file-behaviorsubjectexample-java). 
+      * Difference between PublishSubject and BehaviorSubject is that PublishSubject prints all values after subscription and BehaviorSubject prints the last emitted value before subscription and all the values after subscription.
+   * [ReplaySubject](http://reactivex.io/RxJava/javadoc/io/reactivex/subjects/ReplaySubject.html): ReplaySubject emits all the items of the Observable, regardless of when the subscriber subscribes. [Example](https://gist.github.com/anitaa1990/ee9fad35f2e27c7bdf36d32bfda9a47e#file-replaysubjectexample-java).
+   * [AsyncSubject](http://reactivex.io/RxJava/javadoc/io/reactivex/subjects/AsyncSubject.html): AsyncSubject emits only the last value of the Observable and this only happens after the Observable completes. [Example](https://gist.github.com/anitaa1990/9342b723c44e54616a257ff2a06e6125#file-asyncsubject-java)
+   * UnicastSubject: UnicastSubject allows only a single subscriber and it emits all the items regardless of the time of subscription.  [Example](https://gist.github.com/anitaa1990/14269d7ecaa86ea3bd8193de7f6ae048#file-unicastsubjectexample-java).
+         
+
+
 
 
 
